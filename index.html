@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>XF - Hindi Transliteration Tool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script type="text/javascript">
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "spixi1vvhj");
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex gap-2 justify-content-between align-items-center">
+            <div class="d-flex gap-2 align-items-center">
+                <div class="fw-bold fs-4">Hindi Transliteration</div>
+                <div id="copyBtn" title="Copy transliterated text" class="cursor-pointer">📋</div>
+            </div>
+            <div id="clearBtn" title="Clear content" onclick="clearDiv()">❌</div>
+        </div>
+        <textarea id="input" class="form-control mt-2" rows="5" placeholder="Type in English (e.g. hindi mein type kar bhosdi ke)..."></textarea>
+        <div id="original" class="form-control border-0 border-top border-dotted mt-4"></div>
+        <div style="font-size:7pt;color:#808080;font-family:monospace;">© 2025 XF Systems Ltd.</div>
+    </div>
+
+    <script>
+        const input = document.getElementById("input");
+        const originalDiv = document.getElementById("original");
+
+        let lastWord = "";
+        let originalWords = [];
+
+        function clearDiv() { input.value = ""; lastWord = ""; originalWords = []; originalDiv.innerText = ""; }
+
+        input.addEventListener("input", () => {
+            const value = input.value;
+
+            // If textarea is cleared, reset tracking variables
+            if (value.trim() === "") { clearDiv(); return; }
+            const words = value.trim().split(/\s+/);
+
+            // Check if the last character is a space or newline
+            const lastChar = value.slice(-1);
+            if ((lastChar === " " || lastChar === "\n") && words.length > originalWords.length) {
+                const currentWord = words[words.length - 1];
+                if (currentWord && currentWord !== lastWord) {
+                    lastWord = currentWord;
+
+                    // Store the original word
+                    originalWords.push(currentWord);
+                    originalDiv.innerText = originalWords.join(" ");
+
+                    fetch(`https://www.google.com/inputtools/request?text=${encodeURIComponent(currentWord)}&ime=transliteration_en_hi&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data[0] === "SUCCESS") {
+                                const translits = data[1][0][1];
+                                if (translits && translits.length > 0) {
+                                    words[words.length - 1] = translits[0]; // Replace original word with transliteration
+                                    input.value = words.join(" ") + " ";
+                                }
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Transliteration error:", err);
+                        });
+                }
+            }
+        });
+
+        document.getElementById("copyBtn").addEventListener("click", () => {
+            const textToCopy = input.value.trim();
+            if (textToCopy) {
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => {
+                        // Optional: Visual feedback
+                        const btn = document.getElementById("copyBtn");
+                        const originalEmoji = btn.textContent;
+                        btn.textContent = "✅";
+                        setTimeout(() => btn.textContent = originalEmoji, 1000);
+                    })
+                    .catch(err => {
+                        console.error("Copy failed:", err);
+                        alert("Failed to copy text.");
+                    });
+            }
+        });
+
+    </script>
+
+
+</body>
+</html>
